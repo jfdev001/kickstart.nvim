@@ -90,8 +90,39 @@ P.S. You can delete this when you're done too. It's your config now! :)
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
+vim.o.tabstop = 4 -- A TAB character looks like 4 spaces
+vim.o.expandtab = true -- Pressing the TAB key will insert spaces instead of a TAB character
+vim.o.softtabstop = 4 -- Number of spaces inserted instead of a TAB character
+vim.o.shiftwidth = 4 -- Number of spaces inserted when indenting
+
+vim.api.nvim_create_user_command('CopyFilename', function()
+  vim.fn.setreg('+', vim.fn.expand '%:p')
+  print('Copied: ' .. vim.fn.expand '%:p')
+end, {})
+
+-- Delimit col width
+vim.opt.colorcolumn = '80'
+-- vim.cmd [[highlight ColorColumn ctermbg=16]]
+--
+-- CTRL+A → go to beginning of line
+vim.keymap.set('n', '<C-a>', '^', { noremap = true })
+vim.keymap.set('i', '<C-a>', '<C-o>I', { noremap = true })
+
+-- CTRL+E → go to end of line
+vim.keymap.set('n', '<C-e>', '$', { noremap = true })
+vim.keymap.set('i', '<C-e>', '<C-o>A', { noremap = true })
+
+-- Jump to definition, abandoning the current file
+vim.api.nvim_set_keymap('n', '<LEADER>jd', '<cmd>lua require"telescope.builtin".lsp_definitions()<CR>', { noremap = true, silent = true })
+
+-- Jump to definition, vertical splitting to see code definition
+vim.api.nvim_set_keymap('n', '<LEADER>jv', '<cmd>lua require"telescope.builtin".lsp_definitions({jump_type="vsplit"})<CR>', { noremap = true, silent = true })
+
+-- Jump to definition, horizontal splitting to see code definition
+vim.api.nvim_set_keymap('n', '<LEADER>jh', '<cmd>lua require"telescope.builtin".lsp_definitions({jump_type="split"})<CR>', { noremap = true, silent = true })
+
 -- Set to true if you have a Nerd Font installed and selected in the terminal
-vim.g.have_nerd_font = false
+vim.g.have_nerd_font = true
 
 -- [[ Setting options ]]
 -- See `:help vim.o`
@@ -120,6 +151,7 @@ end)
 
 -- Enable break indent
 vim.o.breakindent = true
+vim.o.expandtab = true
 
 -- Save undo history
 vim.o.undofile = true
@@ -256,6 +288,21 @@ require('lazy').setup({
   -- Use `opts = {}` to automatically pass options to a plugin's `setup()` function, forcing the plugin to be loaded.
   --
 
+  { 'nvim-tree/nvim-web-devicons', opts = {} },
+
+  {
+    '2kabhishek/nerdy.nvim',
+    dependencies = {
+      'folke/snacks.nvim',
+    },
+    cmd = 'Nerdy',
+    opts = {
+      max_recents = 30, -- Configure recent icons limit
+      add_default_keybindings = true, -- Add default keybindings
+      copy_to_clipboard = false, -- Copy glyph to clipboard instead of inserting
+    },
+  },
+
   -- Alternatively, use `config = function() ... end` for full control over the configuration.
   -- If you prefer to call `setup` explicitly, use:
   --    {
@@ -298,58 +345,79 @@ require('lazy').setup({
   -- Then, because we use the `opts` key (recommended), the configuration runs
   -- after the plugin has been loaded as `require(MODULE).setup(opts)`.
 
-  { -- Useful plugin to show you pending keybinds.
-    'folke/which-key.nvim',
-    event = 'VimEnter', -- Sets the loading event to 'VimEnter'
-    opts = {
-      -- delay between pressing a key and opening which-key (milliseconds)
-      -- this setting is independent of vim.o.timeoutlen
-      delay = 0,
-      icons = {
-        -- set icon mappings to true if you have a Nerd Font
-        mappings = vim.g.have_nerd_font,
-        -- If you are using a Nerd Font: set icons.keys to an empty table which will use the
-        -- default which-key.nvim defined Nerd Font icons, otherwise define a string table
-        keys = vim.g.have_nerd_font and {} or {
-          Up = '<Up> ',
-          Down = '<Down> ',
-          Left = '<Left> ',
-          Right = '<Right> ',
-          C = '<C-…> ',
-          M = '<M-…> ',
-          D = '<D-…> ',
-          S = '<S-…> ',
-          CR = '<CR> ',
-          Esc = '<Esc> ',
-          ScrollWheelDown = '<ScrollWheelDown> ',
-          ScrollWheelUp = '<ScrollWheelUp> ',
-          NL = '<NL> ',
-          BS = '<BS> ',
-          Space = '<Space> ',
-          Tab = '<Tab> ',
-          F1 = '<F1>',
-          F2 = '<F2>',
-          F3 = '<F3>',
-          F4 = '<F4>',
-          F5 = '<F5>',
-          F6 = '<F6>',
-          F7 = '<F7>',
-          F8 = '<F8>',
-          F9 = '<F9>',
-          F10 = '<F10>',
-          F11 = '<F11>',
-          F12 = '<F12>',
-        },
-      },
+  -- NOTE: Is it efficient to have multiple language servers... probably not
+  -- however, ale only supports fortitude and gcc linting and has a bit less
+  -- control compared with nvim-lint....
+  -- NOTE: Python linting via flake 8
+  -- maybe need to replace with nvim-lint + conform.nvim ...
+  -- {
+  --   'dense-analysis/ale',
+  --   config = function()
+  --     -- Autofix files
+  --     vim.g.ale_fixers = {
+  --       python = { 'autopep8' },
+  --     }
+  --
+  --     -- Necessary to prevent double linting on fortran files
+  --     vim.g.ale_linters = {
+  --       fortran = {},
+  --     }
+  --     vim.g.ale_fix_on_save = 1
+  --   end,
+  -- },
 
-      -- Document existing key chains
-      spec = {
-        { '<leader>s', group = '[S]earch' },
-        { '<leader>t', group = '[T]oggle' },
-        { '<leader>h', group = 'Git [H]unk', mode = { 'n', 'v' } },
-      },
-    },
-  },
+  --{ -- Useful plugin to show you pending keybinds.
+  --'folke/which-key.nvim',
+  --event = 'VimEnter', -- Sets the loading event to 'VimEnter'
+  --opts = {
+  ---- delay between pressing a key and opening which-key (milliseconds)
+  ---- this setting is independent of vim.o.timeoutlen
+  --delay = 0,
+  --icons = {
+  ---- set icon mappings to true if you have a Nerd Font
+  --mappings = vim.g.have_nerd_font,
+  ---- If you are using a Nerd Font: set icons.keys to an empty table which will use the
+  ---- default which-key.nvim defined Nerd Font icons, otherwise define a string table
+  --keys = vim.g.have_nerd_font and {} or {
+  --Up = '<Up> ',
+  --Down = '<Down> ',
+  --Left = '<Left> ',
+  --Right = '<Right> ',
+  --C = '<C-…> ',
+  --M = '<M-…> ',
+  --D = '<D-…> ',
+  --S = '<S-…> ',
+  --CR = '<CR> ',
+  --Esc = '<Esc> ',
+  --ScrollWheelDown = '<ScrollWheelDown> ',
+  --ScrollWheelUp = '<ScrollWheelUp> ',
+  --NL = '<NL> ',
+  --BS = '<BS> ',
+  --Space = '<Space> ',
+  --Tab = '<Tab> ',
+  --F1 = '<F1>',
+  --F2 = '<F2>',
+  --F3 = '<F3>',
+  --F4 = '<F4>',
+  --F5 = '<F5>',
+  --F6 = '<F6>',
+  --F7 = '<F7>',
+  --F8 = '<F8>',
+  --F9 = '<F9>',
+  --F10 = '<F10>',
+  --F11 = '<F11>',
+  --F12 = '<F12>',
+  --},
+  --},
+
+  ---- Document existing key chains
+  --spec = {
+  --{ '<leader>s', group = '[S]earch' },
+  --{ '<leader>t', group = '[T]oggle' },
+  --{ '<leader>h', group = 'Git [H]unk', mode = { 'n', 'v' } },
+  --},
+  --},
+  --},
 
   -- NOTE: Plugins can specify dependencies.
   --
@@ -768,6 +836,7 @@ require('lazy').setup({
       end,
       formatters_by_ft = {
         lua = { 'stylua' },
+        python = { 'autopep8' },
         -- Conform can also run multiple formatters sequentially
         -- python = { "isort", "black" },
         --
@@ -847,20 +916,20 @@ require('lazy').setup({
         nerd_font_variant = 'mono',
       },
 
-      completion = {
-        -- By default, you may press `<c-space>` to show the documentation.
-        -- Optionally, set `auto_show = true` to show the documentation after a delay.
-        documentation = { auto_show = false, auto_show_delay_ms = 500 },
-      },
+      -- completion = {
+      --   -- By default, you may press `<c-space>` to show the documentation.
+      --   -- Optionally, set `auto_show = true` to show the documentation after a delay.
+      --   documentation = { auto_show = false, auto_show_delay_ms = 500 },
+      -- },
 
-      sources = {
-        default = { 'lsp', 'path', 'snippets', 'lazydev' },
-        providers = {
-          lazydev = { module = 'lazydev.integrations.blink', score_offset = 100 },
-        },
-      },
+      -- sources = {
+      --   default = { 'lsp', 'path', 'snippets', 'lazydev' },
+      --   providers = {
+      --     lazydev = { module = 'lazydev.integrations.blink', score_offset = 100 },
+      --   },
+      -- },
 
-      snippets = { preset = 'luasnip' },
+      -- snippets = { preset = 'luasnip' },
 
       -- Blink.cmp includes an optional, recommended rust fuzzy matcher,
       -- which automatically downloads a prebuilt binary when enabled.
@@ -894,7 +963,9 @@ require('lazy').setup({
       -- Load the colorscheme here.
       -- Like many other themes, this one has different styles, and you could load
       -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
-      vim.cmd.colorscheme 'tokyonight-night'
+      vim.cmd.colorscheme 'tokyonight-moon'
+      -- vim.cmd.colorscheme 'tokyonight-night'
+      -- vim.cmd.colorscheme 'default'
     end,
   },
 
@@ -975,7 +1046,7 @@ require('lazy').setup({
   --
   -- require 'kickstart.plugins.debug',
   -- require 'kickstart.plugins.indent_line',
-  -- require 'kickstart.plugins.lint',
+  require 'kickstart.plugins.lint',
   -- require 'kickstart.plugins.autopairs',
   -- require 'kickstart.plugins.neo-tree',
   -- require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps

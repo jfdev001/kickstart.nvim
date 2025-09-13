@@ -1,12 +1,37 @@
 return {
 
-  { -- Linting
+  { -- Linting: TODO: Add for python???
     'mfussenegger/nvim-lint',
     event = { 'BufReadPre', 'BufNewFile' },
     config = function()
       local lint = require 'lint'
       lint.linters_by_ft = {
-        markdown = { 'markdownlint' },
+        --markdown = { 'markdownlint' },
+        fortran = { 'gfortran' },
+        python = { 'flake8' },
+      }
+
+      -- https://fortran-lang.discourse.group/t/linter-for-nvim/8088/12
+      local pattern = '^([^:]+):(%d+):(%d+):%s+([^:]+):%s+(.*)$'
+      local groups = { 'file', 'lnum', 'col', 'severity', 'message' }
+      local severity_map = {
+        ['Error'] = vim.diagnostic.severity.ERROR,
+        ['Warning'] = vim.diagnostic.severity.WARN,
+      }
+      local defaults = { ['source'] = 'gfortran' }
+      local gfortran_diagnostic_args = { '-Wall', '-Wextra', '-fmax-errors=5', '-cpp' }
+      local required_args = { '-fsyntax-only', '-fdiagnostics-plain-output', '-J/tmp' }
+      local args = vim.list_extend(required_args, gfortran_diagnostic_args)
+
+      lint.linters.gfortran = {
+        cmd = 'gfortran',
+        stdin = false,
+        append_fname = true,
+        stream = 'stderr',
+        env = nil,
+        args = args,
+        ignore_exitcode = true,
+        parser = require('lint.parser').from_pattern(pattern, groups, severity_map, defaults),
       }
 
       -- To allow other plugins to add linters to require('lint').linters_by_ft,
