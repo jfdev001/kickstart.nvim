@@ -1,6 +1,6 @@
 return {
 
-  { -- Linting: TODO: Add for python???
+  { 
     'mfussenegger/nvim-lint',
     event = { 'BufReadPre', 'BufNewFile' },
     config = function()

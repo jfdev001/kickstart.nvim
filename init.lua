@@ -345,27 +345,6 @@ require('lazy').setup({
   -- Then, because we use the `opts` key (recommended), the configuration runs
   -- after the plugin has been loaded as `require(MODULE).setup(opts)`.
 
-  -- NOTE: Is it efficient to have multiple language servers... probably not
-  -- however, ale only supports fortitude and gcc linting and has a bit less
-  -- control compared with nvim-lint....
-  -- NOTE: Python linting via flake 8
-  -- maybe need to replace with nvim-lint + conform.nvim ...
-  -- {
-  --   'dense-analysis/ale',
-  --   config = function()
-  --     -- Autofix files
-  --     vim.g.ale_fixers = {
-  --       python = { 'autopep8' },
-  --     }
-  --
-  --     -- Necessary to prevent double linting on fortran files
-  --     vim.g.ale_linters = {
-  --       fortran = {},
-  --     }
-  --     vim.g.ale_fix_on_save = 1
-  --   end,
-  -- },
-
   --{ -- Useful plugin to show you pending keybinds.
   --'folke/which-key.nvim',
   --event = 'VimEnter', -- Sets the loading event to 'VimEnter'
@@ -784,6 +763,11 @@ require('lazy').setup({
       local ensure_installed = vim.tbl_keys(servers or {})
       vim.list_extend(ensure_installed, {
         'stylua', -- Used to format Lua code
+        'fortls',
+        'jedi-language-server',
+        'bash-language-server',
+        'autopep8',
+        'flake8'
       })
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
